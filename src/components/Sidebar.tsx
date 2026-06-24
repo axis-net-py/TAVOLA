@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Trash2, MessageSquare } from 'lucide-react'
+import { Plus, Trash2, MessageSquare, X } from 'lucide-react'
 import type { Thread } from '@/lib/history'
 
 export function Sidebar({
@@ -9,20 +9,33 @@ export function Sidebar({
   onSelect,
   onNew,
   onDelete,
+  onClose,
 }: {
   threads: Thread[]
   activeId: string
   onSelect: (id: string) => void
   onNew: () => void
   onDelete: (id: string) => void
+  onClose?: () => void
 }) {
   return (
     <aside className="w-64 shrink-0 border-r border-border bg-panel flex flex-col h-full">
-      <div className="p-5 border-b border-border">
-        <h1 className="serif text-2xl leading-none text-gold">
-          Conselheiro<span className="text-fg"> AXIS</span>
-        </h1>
-        <p className="text-[10px] uppercase tracking-[0.25em] text-muted mt-1.5">Mesa Redonda</p>
+      <div className="p-5 border-b border-border flex items-start justify-between gap-2">
+        <div>
+          <h1 className="serif text-2xl leading-none text-gold">
+            Conselheiro<span className="text-fg"> AXIS</span>
+          </h1>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-muted mt-1.5">Mesa Redonda</p>
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="md:hidden text-muted hover:text-fg -mr-1 shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <button
@@ -50,7 +63,7 @@ export function Sidebar({
                 onDelete(t.id)
               }}
               aria-label="Excluir conversa"
-              className="opacity-0 group-hover:opacity-100 text-muted hover:text-red-400 transition"
+              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 text-muted hover:text-red-400 transition shrink-0 p-0.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -59,9 +72,7 @@ export function Sidebar({
       </nav>
 
       <div className="p-3 border-t border-border">
-        <p className="text-[10px] text-muted leading-relaxed">
-          Histórico salvo localmente neste navegador.
-        </p>
+        <p className="text-[10px] text-muted leading-relaxed">Histórico salvo localmente neste navegador.</p>
       </div>
     </aside>
   )
