@@ -5,6 +5,7 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { Mic, MicOff, Send, Loader2, Sparkles, User, BrainCircuit, AlertCircle } from 'lucide-react'
 import { getThread, saveThread, titleFrom, type StoredMessage } from '@/lib/history'
+import { MENTOR_ROSTER } from '@/lib/advisor/mentors'
 
 function messageText(msg: UIMessage): string {
   return (msg.parts ?? []).map((p) => (p.type === 'text' ? p.text : '')).join('')
@@ -41,8 +42,16 @@ export function Chat({
   const deepRef = useRef(deep)
   deepRef.current = deep
 
+  const [mentor, setMentor] = useState('')
+  const mentorRef = useRef(mentor)
+  mentorRef.current = mentor
+
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: '/api/advisor', body: () => ({ deep: deepRef.current }) }),
+    () =>
+      new DefaultChatTransport({
+        api: '/api/advisor',
+        body: () => ({ deep: deepRef.current, mentor: mentorRef.current }),
+      }),
     [],
   )
   const { messages, sendMessage, status, error } = useChat({ id: threadId, messages: initialMessages, transport })
@@ -53,6 +62,13 @@ export function Chat({
   const endRef = useRef<HTMLDivElement>(null)
   const initialLen = useRef(initialMessages.length)
   const loading = status === 'submitted' || status === 'streaming'
+
+  // Mentors grouped by domain for the picker.
+  const mentorGroups = useMemo(() => {
+    const g = new Map<string, string[]>()
+    for (const m of MENTOR_ROSTER) g.set(m.domain, [...(g.get(m.domain) ?? []), m.name])
+    return [...g.entries()]
+  }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -119,18 +135,51 @@ export function Chat({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
+      {/* Mentor picker — "convocar" a single mentor or keep the full roundtable */}
+      <div className="border-b border-border px-4 sm:px-5 py-2 flex items-center gap-2 text-[12px] shrink-0">
+        <span className="text-muted shrink-0">Falar com:</span>
+        <select
+          value={mentor}
+          onChange={(e) => setMentor(e.target.value)}
+          className="flex-1 min-w-0 bg-panel2 border border-border rounded-lg px-2 py-1.5 text-fg focus:outline-none focus:border-gold/50"
+        >
+          <option value="">Mesa redonda — todos os mentores</option>
+          {mentorGroups.map(([domain, names]) => (
+            <optgroup key={domain} label={domain}>
+              {names.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        {mentor && <span className="text-gold shrink-0 hidden sm:inline">· modo solo</span>}
+      </div>
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto max-w-3xl px-5 py-8 space-y-6">
           {messages.length === 0 && (
-            <div className="text-center pt-16">
+            <div className="text-center pt-12">
               <Sparkles className="w-8 h-8 text-gold mx-auto mb-4" />
-              <h2 className="serif text-3xl text-fg mb-2">Traga seu problema à mesa</h2>
-              <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
-                Pricing, escala, vendas, marca, decisão. Os mentores mais pertinentes respondem em primeira pessoa, e o
-                Arquiteto fecha com um plano de ação.
-              </p>
+              {mentor ? (
+                <>
+                  <h2 className="serif text-3xl text-fg mb-2">Debate com {mentor}</h2>
+                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
+                    {mentor} responde em primeira pessoa, como ele mesmo. Pergunte, provoque, discorde — é um diálogo direto.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="serif text-3xl text-fg mb-2">Traga seu problema à mesa</h2>
+                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
+                    Pricing, escala, vendas, marca, decisão. Os mentores mais pertinentes respondem em primeira pessoa, e o
+                    Arquiteto fecha com um plano de ação.
+                  </p>
+                </>
+              )}
             </div>
           )}
 
@@ -166,7 +215,7 @@ export function Chat({
               </div>
               <div className="rounded-2xl px-4 py-3 bg-panel border border-border flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-gold" />
-                <span className="text-sm text-muted">Consultando a mesa...</span>
+                <span className="text-sm text-muted">{mentor ? `${mentor} está pensando...` : 'Consultando a mesa...'}</span>
               </div>
             </div>
           )}
@@ -186,12 +235,12 @@ export function Chat({
       </div>
 
       {/* Composer */}
-      <div className="border-t border-border bg-panel/60 backdrop-blur">
+      <div className="border-t border-border bg-panel/60 backdrop-blur shrink-0">
         <form onSubmit={submit} className="mx-auto max-w-3xl px-5 py-4 flex items-end gap-2">
           <button
             type="button"
             onClick={() => setDeep((d) => !d)}
-            title="Análise profunda (Opus)"
+            title="Análise profunda"
             className={`p-2.5 rounded-xl border transition-colors shrink-0 ${
               deep ? 'border-gold/60 bg-gold/10 text-gold' : 'border-border text-muted hover:text-fg'
             }`}
@@ -215,8 +264,8 @@ export function Chat({
               if (e.key === 'Enter' && !e.shiftKey) submit(e)
             }}
             rows={1}
-            placeholder="Traga seu problema à mesa..."
-            className="flex-1 resize-none bg-panel2 border border-border rounded-xl px-4 py-2.5 text-[14px] text-fg placeholder:text-muted focus:outline-none focus:border-gold/50 max-h-40"
+            placeholder={mentor ? `Pergunte a ${mentor.split(' ')[0]}…` : 'Traga seu problema…'}
+            className="flex-1 resize-none bg-panel2 border border-border rounded-xl px-4 py-2.5 text-[14px] leading-6 text-fg placeholder:text-muted focus:outline-none focus:border-gold/50 max-h-40"
           />
           <button
             type="submit"
