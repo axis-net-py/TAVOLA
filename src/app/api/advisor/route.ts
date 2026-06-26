@@ -2,6 +2,7 @@ import { streamText, convertToModelMessages, stepCountIs, type UIMessage } from 
 import { google } from '@ai-sdk/google'
 import { advisorModel } from '@/lib/advisor/model'
 import { buildSystemPrompt, buildMentorPrompt } from '@/lib/advisor/system-prompt'
+import type { Lang } from '@/lib/i18n'
 
 export const maxDuration = 120
 
@@ -13,12 +14,13 @@ export async function POST(req: Request) {
     })
   }
 
-  const { messages, deep, mentor }: { messages: UIMessage[]; deep?: boolean; mentor?: string } =
+  const { messages, deep, mentor, lang }: { messages: UIMessage[]; deep?: boolean; mentor?: string; lang?: Lang } =
     await req.json()
+  const language: Lang = lang === 'es' ? 'es' : 'pt'
 
   const result = streamText({
     model: advisorModel(Boolean(deep)),
-    system: mentor ? buildMentorPrompt(mentor) : buildSystemPrompt(),
+    system: mentor ? buildMentorPrompt(mentor, language) : buildSystemPrompt(language),
     messages: await convertToModelMessages(messages),
     tools: {
       google_search: google.tools.googleSearch({}),

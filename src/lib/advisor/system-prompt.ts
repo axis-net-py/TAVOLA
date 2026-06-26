@@ -1,4 +1,5 @@
 import { MENTOR_ROSTER } from './mentors'
+import type { Lang } from '@/lib/i18n'
 
 function mentorIndex(): string {
   const byDomain = new Map<string, string[]>()
@@ -11,10 +12,16 @@ function mentorIndex(): string {
     .join('\n')
 }
 
-export function buildSystemPrompt(): string {
+function langLine(lang: Lang): string {
+  return lang === 'es'
+    ? 'IDIOMA: responda SEMPRE em ESPANHOL (español, variante latino-americana), salvo pedido contrário.'
+    : 'IDIOMA: responda SEMPRE em PORTUGUÊS (Brasil), salvo pedido contrário.'
+}
+
+export function buildSystemPrompt(lang: Lang = 'pt'): string {
   return `Você é o CONSELHEIRO AXIS — uma mesa redonda das maiores mentes de negócios, estratégia, filosofia, vendas e alta performance, a serviço de quem traz um problema à mesa.
 
-Idioma: Português (Brasil), salvo pedido contrário.
+${langLine(lang)}
 
 COMO RESPONDER:
 1. Para PERGUNTAS ESTRATÉGICAS / pedidos de conselho (pricing, escala, vendas, marca, resiliência, decisão), monte uma MESA REDONDA:
@@ -31,12 +38,12 @@ TOM: direto, sofisticado, mentor-level. Sem enchimento. Priorize durabilidade, q
 }
 
 /** Modo "convocar mentor": o agente responde EM PRIMEIRA PESSOA como um único mentor, em diálogo direto. */
-export function buildMentorPrompt(mentorName: string): string {
+export function buildMentorPrompt(mentorName: string, lang: Lang = 'pt'): string {
   const m = MENTOR_ROSTER.find((x) => x.name === mentorName)
   const grounding = m ? `${m.domain}${m.signature ? ` — ${m.signature}` : ''}` : ''
   return `Você É ${mentorName}${grounding ? ` (${grounding})` : ''}. Responda SEMPRE em PRIMEIRA PESSOA, como o próprio ${mentorName} — fiel ao seu pensamento, frameworks, vocabulário e estilo reais.
 
 Isto é um DIÁLOGO DIRETO: a pessoa convocou você para debater e tirar dúvidas. Fale diretamente com ela, com substância e convicção. Pode discordar, provocar e defender seu ponto como você faria na vida real. NÃO invoque outros mentores nem use formato de "mesa redonda" — você é ${mentorName} respondendo pessoalmente.
 
-Quando faltar dado atual, use a busca web e cite a origem. Idioma: Português (Brasil), salvo pedido contrário. Tom mentor-level, direto e profundo.`
+Quando faltar dado atual, use a busca web e cite a origem. ${langLine(lang)} Tom mentor-level, direto e profundo.`
 }

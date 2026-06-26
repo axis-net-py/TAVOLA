@@ -6,6 +6,7 @@ import { DefaultChatTransport, type UIMessage } from 'ai'
 import { Mic, MicOff, Send, Loader2, Sparkles, User, BrainCircuit, AlertCircle } from 'lucide-react'
 import { getThread, saveThread, titleFrom, type StoredMessage } from '@/lib/history'
 import { MENTOR_ROSTER } from '@/lib/advisor/mentors'
+import type { Dict, Lang } from '@/lib/i18n'
 
 function messageText(msg: UIMessage): string {
   return (msg.parts ?? []).map((p) => (p.type === 'text' ? p.text : '')).join('')
@@ -33,10 +34,14 @@ export function Chat({
   threadId,
   initialMessages,
   onPersisted,
+  t,
+  lang,
 }: {
   threadId: string
   initialMessages: UIMessage[]
   onPersisted: () => void
+  t: Dict
+  lang: Lang
 }) {
   const [deep, setDeep] = useState(false)
   const deepRef = useRef(deep)
@@ -46,11 +51,14 @@ export function Chat({
   const mentorRef = useRef(mentor)
   mentorRef.current = mentor
 
+  const langRef = useRef(lang)
+  langRef.current = lang
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: '/api/advisor',
-        body: () => ({ deep: deepRef.current, mentor: mentorRef.current }),
+        body: () => ({ deep: deepRef.current, mentor: mentorRef.current, lang: langRef.current }),
       }),
     [],
   )
@@ -63,7 +71,6 @@ export function Chat({
   const initialLen = useRef(initialMessages.length)
   const loading = status === 'submitted' || status === 'streaming'
 
-  // Mentors grouped by domain for the picker.
   const mentorGroups = useMemo(() => {
     const g = new Map<string, string[]>()
     for (const m of MENTOR_ROSTER) g.set(m.domain, [...(g.get(m.domain) ?? []), m.name])
@@ -93,7 +100,7 @@ export function Chat({
     onPersisted()
   }, [status, messages, threadId, onPersisted])
 
-  // Web Speech voice input (pt-BR).
+  // Web Speech voice input — language follows the UI language.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const w = window as unknown as { SpeechRecognition?: new () => unknown; webkitSpeechRecognition?: new () => unknown }
@@ -112,13 +119,13 @@ export function Chat({
     }
     rec.continuous = false
     rec.interimResults = false
-    rec.lang = 'pt-BR'
+    rec.lang = lang === 'es' ? 'es-ES' : 'pt-BR'
     rec.onstart = () => setRecording(true)
     rec.onresult = (e) => setInput(e.results[0][0].transcript)
     rec.onerror = () => setRecording(false)
     rec.onend = () => setRecording(false)
     speechRef.current = rec
-  }, [])
+  }, [lang])
 
   const toggleRecording = () => {
     const rec = speechRef.current
@@ -134,17 +141,19 @@ export function Chat({
     setInput('')
   }
 
+  const firstName = mentor.split(' ')[0]
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Mentor picker — "convocar" a single mentor or keep the full roundtable */}
       <div className="border-b border-border px-4 sm:px-5 py-2 flex items-center gap-2 text-[12px] shrink-0">
-        <span className="text-muted shrink-0">Falar com:</span>
+        <span className="text-muted shrink-0">{t.talkWith}</span>
         <select
           value={mentor}
           onChange={(e) => setMentor(e.target.value)}
           className="flex-1 min-w-0 bg-panel2 border border-border rounded-lg px-2 py-1.5 text-fg focus:outline-none focus:border-gold/50"
         >
-          <option value="">Mesa redonda — todos os mentores</option>
+          <option value="">{t.roundtableOption}</option>
           {mentorGroups.map(([domain, names]) => (
             <optgroup key={domain} label={domain}>
               {names.map((n) => (
@@ -155,7 +164,7 @@ export function Chat({
             </optgroup>
           ))}
         </select>
-        {mentor && <span className="text-gold shrink-0 hidden sm:inline">· modo solo</span>}
+        {mentor && <span className="text-gold shrink-0 hidden sm:inline">{t.soloBadge}</span>}
       </div>
 
       {/* Messages */}
@@ -166,18 +175,13 @@ export function Chat({
               <Sparkles className="w-8 h-8 text-gold mx-auto mb-4" />
               {mentor ? (
                 <>
-                  <h2 className="serif text-3xl text-fg mb-2">Debate com {mentor}</h2>
-                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
-                    {mentor} responde em primeira pessoa, como ele mesmo. Pergunte, provoque, discorde — é um diálogo direto.
-                  </p>
+                  <h2 className="serif text-3xl text-fg mb-2">{t.emptyMentorTitle.replace('{m}', mentor)}</h2>
+                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">{t.emptyMentorBody.replace('{m}', mentor)}</p>
                 </>
               ) : (
                 <>
-                  <h2 className="serif text-3xl text-fg mb-2">Traga seu problema à mesa</h2>
-                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
-                    Pricing, escala, vendas, marca, decisão. Os mentores mais pertinentes respondem em primeira pessoa, e o
-                    Arquiteto fecha com um plano de ação.
-                  </p>
+                  <h2 className="serif text-3xl text-fg mb-2">{t.emptyTitle}</h2>
+                  <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">{t.emptyBody}</p>
                 </>
               )}
             </div>
@@ -215,7 +219,7 @@ export function Chat({
               </div>
               <div className="rounded-2xl px-4 py-3 bg-panel border border-border flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-gold" />
-                <span className="text-sm text-muted">{mentor ? `${mentor} está pensando...` : 'Consultando a mesa...'}</span>
+                <span className="text-sm text-muted">{mentor ? t.mentorThinking.replace('{m}', mentor) : t.consulting}</span>
               </div>
             </div>
           )}
@@ -226,7 +230,7 @@ export function Chat({
                 <AlertCircle className="w-4 h-4" />
               </div>
               <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-                {error.message || 'Erro ao consultar o Conselheiro. Tente novamente.'}
+                {error.message || t.errorFallback}
               </div>
             </div>
           )}
@@ -240,7 +244,7 @@ export function Chat({
           <button
             type="button"
             onClick={() => setDeep((d) => !d)}
-            title="Análise profunda"
+            title={t.deepTitle}
             className={`p-2.5 rounded-xl border transition-colors shrink-0 ${
               deep ? 'border-gold/60 bg-gold/10 text-gold' : 'border-border text-muted hover:text-fg'
             }`}
@@ -250,7 +254,7 @@ export function Chat({
           <button
             type="button"
             onClick={toggleRecording}
-            title="Falar"
+            title={t.speakTitle}
             className={`p-2.5 rounded-xl border transition-colors shrink-0 ${
               recording ? 'border-red-500 bg-red-500/10 text-red-400 animate-pulse' : 'border-border text-muted hover:text-fg'
             }`}
@@ -264,7 +268,7 @@ export function Chat({
               if (e.key === 'Enter' && !e.shiftKey) submit(e)
             }}
             rows={1}
-            placeholder={mentor ? `Pergunte a ${mentor.split(' ')[0]}…` : 'Traga seu problema…'}
+            placeholder={mentor ? t.placeholderMentor.replace('{m}', firstName) : t.placeholder}
             className="flex-1 resize-none bg-panel2 border border-border rounded-xl px-4 py-2.5 text-[14px] leading-6 text-fg placeholder:text-muted focus:outline-none focus:border-gold/50 max-h-40"
           />
           <button
