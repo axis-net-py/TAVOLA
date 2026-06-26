@@ -5,6 +5,7 @@ import type { UIMessage } from 'ai'
 import { Menu } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { Chat } from '@/components/Chat'
+import { LangSwitch } from '@/components/LangSwitch'
 import { listThreads, getThread, deleteThread, newId, type Thread } from '@/lib/history'
 import { dict, LANG_KEY, type Lang } from '@/lib/i18n'
 
@@ -83,6 +84,7 @@ export default function Page() {
       </div>
 
       <main className="flex-1 min-w-0 flex flex-col">
+        {/* Mobile top bar — language switch is visible here without opening the drawer */}
         <div className="md:hidden flex items-center gap-3 h-14 shrink-0 border-b border-border bg-panel px-4">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -95,6 +97,7 @@ export default function Page() {
             {t.brandWord}
             <span className="text-fg"> AXIS</span>
           </span>
+          <LangSwitch lang={lang} setLang={setLang} className="ml-auto" />
         </div>
 
         <div className="flex-1 min-h-0">
