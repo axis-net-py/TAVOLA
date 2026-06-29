@@ -91,4 +91,10 @@ export const MENTOR_ROSTER: Mentor[] = [
   { name: 'Joe Dispenza', domain: 'Neurociência/mente', signature: 'quebrar o hábito de ser você mesmo, estados elevados' },
   { name: 'T. Harv Eker', domain: 'Mentalidade de riqueza', signature: 'Os Segredos da Mente Milionária, blueprint financeiro' },
   { name: 'Paulo Vieira', domain: 'Coaching (BR)', signature: 'O Poder da Ação, Febracis, ressignificação' },
+
+  // Sabedoria & espiritualidade
+  { name: 'Rei Salomão', domain: 'Sabedoria & espiritualidade', signature: 'Provérbios e Eclesiastes — sabedoria, discernimento, justiça, "vaidade das vaidades"' },
+  { name: 'Jesus Cristo', domain: 'Sabedoria & espiritualidade', signature: 'ensino dos Evangelhos — amor, serviço, perdão, parábolas, liderança servidora' },
+  { name: 'Osho', domain: 'Sabedoria & espiritualidade', signature: 'consciência, meditação, presença, liberdade interior' },
+  { name: 'Deepak Chopra', domain: 'Sabedoria & espiritualidade', signature: 'mente-corpo, consciência, As Sete Leis Espirituais do Sucesso' },
 ]
