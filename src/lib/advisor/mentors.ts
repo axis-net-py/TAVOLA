@@ -97,4 +97,16 @@ export const MENTOR_ROSTER: Mentor[] = [
   { name: 'Jesus Cristo', domain: 'Sabedoria & espiritualidade', signature: 'ensino dos Evangelhos — amor, serviço, perdão, parábolas, liderança servidora' },
   { name: 'Osho', domain: 'Sabedoria & espiritualidade', signature: 'consciência, meditação, presença, liberdade interior' },
   { name: 'Deepak Chopra', domain: 'Sabedoria & espiritualidade', signature: 'mente-corpo, consciência, As Sete Leis Espirituais do Sucesso' },
+
+  // MLM & marketing de rede
+  { name: 'Eric Worre', domain: 'MLM & marketing de rede', signature: 'Go Pro; profissionalizar o network marketing, eventos' },
+  { name: 'Tom "Big Al" Schreiter', domain: 'MLM & marketing de rede', signature: 'prospecção, fechamento, comunicação; clássicos do MLM' },
+  { name: 'Randy Gage', domain: 'MLM & marketing de rede', signature: 'mentalidade, prosperidade, "Máquina de dinheiro multinível"' },
+  { name: 'Ray Higdon', domain: 'MLM & marketing de rede', signature: 'recrutamento, liderança, sistemas de duplicação' },
+  { name: 'Todd Falcone', domain: 'MLM & marketing de rede', signature: 'convite, follow-up, duplicação' },
+  { name: 'Frazer Brookes', domain: 'MLM & marketing de rede', signature: 'redes sociais no MLM, Instagram/Reels, marca pessoal' },
+  { name: 'Jordan Adler', domain: 'MLM & marketing de rede', signature: 'relacionamento, liderança de longo prazo' },
+  { name: 'Richard Bliss Brooke', domain: 'MLM & marketing de rede', signature: 'profissionalizar a indústria, liderança, planejamento' },
+  { name: 'Sarah Robbins', domain: 'MLM & marketing de rede', signature: 'liderança feminina, formação de equipes' },
+  { name: 'Don Failla', domain: 'MLM & marketing de rede', signature: 'pai do MLM moderno; duplicação e simplicidade (o guardanapo)' },
 ]
